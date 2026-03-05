@@ -1,11 +1,12 @@
 ﻿using DevExpress.XtraReports.UI;
 using DevExpress.XtraReports.Web.Extensions;
+using DevExpress.DataAccess.ObjectBinding; // VERİ KAYNAĞI İÇİN GEREKLİ KÜTÜPHANE
 using Core.Entities;
 using Core.Enums;
 using Core.Repositories;
 using Core.UnitOfWorks;
 
-namespace WebUI.Services
+namespace Service.Services
 {
     public class CustomReportStorageWebExtension : ReportStorageWebExtension
     {
@@ -27,6 +28,7 @@ namespace WebUI.Services
         {
             try
             {
+                // 1. Veritabanında şablon var mı diye bak (Örn: id = "5")
                 if (int.TryParse(url, out int templateId))
                 {
                     var template = _templateRepository.Where(x => x.Id == templateId).FirstOrDefault();
@@ -36,9 +38,20 @@ namespace WebUI.Services
                     }
                 }
 
+                // 2. BULUNAMAZSA: Boş rapor oluştur ama içine TEKLİF şemasını (ObjectDataSource) bağla!
+                XtraReport report = new XtraReport();
+
+                // DevExpress'e Teklif modelimizin iskeletini öğretiyoruz
+                ObjectDataSource dataSource = new ObjectDataSource();
+                dataSource.Name = "TeklifVeriKaynagi";
+                dataSource.DataSource = typeof(Core.DTOs.Reporting.TeklifRaporDTO);
+
+                // Veri kaynağını rapora ekle
+                report.DataSource = dataSource;
+
                 using (var ms = new MemoryStream())
                 {
-                    new XtraReport().SaveLayoutToXml(ms);
+                    report.SaveLayoutToXml(ms);
                     return ms.ToArray();
                 }
             }
@@ -69,11 +82,15 @@ namespace WebUI.Services
 
         public override string SetNewData(XtraReport report, string defaultUrl)
         {
+            // defaultUrl bize Controller'dan gelir (Örn: "Yeni_Tasarim_Teklif" veya "Yeni_Tasarim_Siparis")
+            // Buna göre şablonun tipini belirliyoruz. Şimdilik Teklif listesinden geldiği için Teklif yapıyoruz.
+            DocumentType docType = DocumentType.Teklif;
+
             var newTemplate = new ReportTemplate
             {
-                Name = "Yeni Teklif Tasarımı - " + DateTime.Now.ToString("HH:mm"),
-                DocumentType = DocumentType.Teklif,
-                IsDefault = false
+                Name = "Teklif Şablonu - " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"),
+                DocumentType = docType,
+                IsDefault = true
             };
 
             using (var ms = new MemoryStream())
@@ -82,7 +99,6 @@ namespace WebUI.Services
                 newTemplate.LayoutData = ms.ToArray();
             }
 
-            // Senkron çalışması için Wait() kullanıyoruz (DevExpress altyapısı senkron bekler)
             _templateRepository.AddAsync(newTemplate).Wait();
             _unitOfWork.Commit();
 

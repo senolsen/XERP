@@ -10,31 +10,41 @@ namespace WebUI.Controllers
     public class TeklifController : Controller
     {
         private readonly ITeklifService _teklifService;
-        private readonly IGenericRepository<Teklif> _teklifRepository; // EKSİK OLAN BUYDU
+        private readonly IGenericRepository<Teklif> _teklifRepository;
         private readonly IGenericRepository<Musteri> _musteriRepository;
         private readonly IGenericRepository<Urun> _urunRepository;
 
-        // Constructor'a teklifRepository eklendi
+        // YENİ EKLENEN: Açılır menüye şablonları gönderebilmek için ReportTemplate repository'si
+        private readonly IGenericRepository<ReportTemplate> _templateRepository;
+
+        // Constructor'a templateRepository eklendi
         public TeklifController(
             ITeklifService teklifService,
             IGenericRepository<Teklif> teklifRepository,
             IGenericRepository<Musteri> musteriRepository,
-            IGenericRepository<Urun> urunRepository)
+            IGenericRepository<Urun> urunRepository,
+            IGenericRepository<ReportTemplate> templateRepository)
         {
             _teklifService = teklifService;
-            _teklifRepository = teklifRepository; // ATAMASI YAPILDI
+            _teklifRepository = teklifRepository;
             _musteriRepository = musteriRepository;
             _urunRepository = urunRepository;
+            _templateRepository = templateRepository; // ATAMASI YAPILDI
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Artık _teklifRepository sorunsuz çalışacak
+            // 1. Teklifleri Çekiyoruz
             var teklifler = await _teklifRepository.GetAll()
                 .Include(x => x.Musteri)
                 .Where(x => x.IsActive && !x.IsDeleted)
                 .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+
+            // 2. DİKKAT: Veritabanındaki aktif Teklif şablonlarını çekip ViewBag'e atıyoruz (Açılır menü için)
+            ViewBag.Templates = await _templateRepository
+                .Where(x => x.DocumentType == Core.Enums.DocumentType.Teklif && x.IsActive && !x.IsDeleted)
                 .ToListAsync();
 
             return View(teklifler);

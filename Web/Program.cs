@@ -8,6 +8,9 @@ using WebUI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// DÝKKAT EKLENEN KOD: DevExpress Veri Güvenliði Ayarý (Core katmanýndaki sýnýflarýmýza izin veriyoruz)
+DevExpress.Utils.DeserializationSettings.RegisterTrustedAssembly(typeof(Core.DTOs.Reporting.TeklifRaporDTO).Assembly);
+
 // 1. EF Core & SQL Server Baðlantýsý
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -46,8 +49,8 @@ builder.Services.ConfigureReportingServices(configurator => {
     });
 });
 
-// BUNU EKLÝYORUZ: DevExpress Storage
-builder.Services.AddScoped<DevExpress.XtraReports.Web.Extensions.ReportStorageWebExtension, WebUI.Services.CustomReportStorageWebExtension>();
+// BUNU EKLÝYORUZ: DevExpress Storage (Service katmanýndan çaðýrýyoruz)
+builder.Services.AddScoped<DevExpress.XtraReports.Web.Extensions.ReportStorageWebExtension, Service.Services.CustomReportStorageWebExtension>();
 
 var app = builder.Build();
 
