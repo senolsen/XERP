@@ -1,0 +1,57 @@
+﻿@model IEnumerable<Core.Entities.Teklif>
+@{
+    ViewData["Title"] = "Teklifler";
+    // Layout = null;
+}
+
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-primary"><i class="fa fa-list me-2"></i>Teklif Listesi</h3>
+            <a href="/Teklif/Create" class="btn btn-success">
+                <i class="fa fa-plus me-1"></i> Yeni Teklif Oluştur
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Teklif No</th>
+                                <th>Müşteri (Cari)</th>
+                                <th>Tarih</th>
+                                <th>Toplam Tutar</th>
+                                <th class="text-end pe-4">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">Henüz hiç teklif oluşturulmamış.</td>
+                                </tr>
+                            }
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold">@item.TeklifNo</td>
+                                    <td>@item.Musteri?.Unvan</td>
+                                    <td>@item.Tarih.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td><span class="badge bg-success fs-6">@item.ToplamTutar.ToString("N2") ₺</span></td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a href="/Print/Document?docType=1&documentId=@item.Id" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                <i class="fa fa-print"></i> Yazdır / PDF
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-info"><i class="fa fa-eye"></i> İncele</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>

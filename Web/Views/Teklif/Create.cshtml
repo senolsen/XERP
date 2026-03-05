@@ -1,0 +1,206 @@
+﻿@{
+    ViewData["Title"] = "Yeni Teklif";
+    // Layout = null;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white pt-4 pb-2 border-bottom-0">
+            <h4 class="text-primary"><i class="fa fa-file-invoice-dollar me-2"></i>Yeni Teklif Hazırlama Formu</h4>
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-4 bg-light p-3 rounded mx-0">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Müşteri Seçin (AJAX Arama)</label>
+                    <select id="MusteriId" class="form-select"></select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Teklif No</label>
+                    <input type="text" class="form-control bg-white" value="@ViewBag.TeklifNo" readonly />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Tarih</label>
+                    <input type="text" class="form-control bg-white" value="@DateTime.Now.ToString("dd.MM.yyyy")" readonly />
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Teklif Açıklaması / Özel Notlar</label>
+                    <textarea id="Aciklama" class="form-control" rows="2" placeholder="Örn: Bu teklif 15 gün geçerlidir..."></textarea>
+                </div>
+            </div>
+
+            <h5 class="mb-3 text-secondary border-bottom pb-2">Ürün ve Hizmet Kalemleri</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="kalemTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="45%">Ürün/Hizmet Ara...</th>
+                            <th width="15%">Miktar</th>
+                            <th width="15%">Birim Fiyat (₺)</th>
+                            <th width="15%">Satır Tutarı (₺)</th>
+                            <th width="10%" class="text-center">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kalemBody">
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold fs-5 align-middle">Genel Toplam:</td>
+                            <td colspan="2" class="fw-bold fs-4 text-success align-middle" id="genelToplam">0.00 ₺</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <button type="button" class="btn btn-outline-primary mb-4" onclick="satirEkle()">
+                <i class="fa fa-plus me-1"></i> Yeni Satır Ekle
+            </button>
+
+            <hr />
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-success btn-lg px-5 shadow" id="btnKaydet" onclick="teklifiKaydet()">
+                    <i class="fa fa-save me-2"></i> Teklifi Kaydet
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Müşteri Arama (Select2)
+            $('#MusteriId').select2({
+                theme: 'bootstrap-5',
+                placeholder: "Firma unvanı veya vergi no yazın...",
+                minimumInputLength: 2,
+                ajax: {
+                    url: '/Teklif/SearchMusteri',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { q: params.term }; },
+                    processResults: function (data) { return { results: data.results }; }
+                }
+            });
+
+            // Sayfa açılırken ilk boş satırı otomatik ekle
+            satirEkle();
+        });
+
+        // Dinamik Satır Ekleme İşlemi
+        function satirEkle() {
+            var tr = `
+                <tr class="kalem-row">
+                    <td><select class="form-select urun-select"></select></td>
+                    <td><input type="number" class="form-control miktar-input" value="1" min="1" onkeyup="hesapla()" onchange="hesapla()"></td>
+                    <td><input type="number" step="0.01" class="form-control fiyat-input" value="0.00" onkeyup="hesapla()" onchange="hesapla()"></td>
+                    <td><input type="text" class="form-control tutar-input text-end bg-light fw-bold" value="0.00" readonly></td>
+                    <td class="text-center"><button type="button" class="btn btn-sm btn-danger" onclick="satirSil(this)"><i class="fa fa-trash"></i></button></td>
+                </tr>
+            `;
+
+            $('#kalemBody').append(tr);
+            var lastRow = $('#kalemBody tr').last();
+            var selectElement = lastRow.find('.urun-select');
+
+            // Yeni eklenen satırdaki ürün arama motorunu (Select2) aktif et
+            selectElement.select2({
+                theme: 'bootstrap-5',
+                placeholder: "Ürün ara...",
+                minimumInputLength: 2,
+                ajax: {
+                    url: '/Teklif/SearchUrun',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { q: params.term }; },
+                    processResults: function (data) { return { results: data.results }; }
+                }
+            });
+
+            // Ürün seçildiğinde, API'den gelen fiyati Input'a otomatik yaz
+            selectElement.on('select2:select', function (e) {
+                var row = $(this).closest('tr');
+                row.find('.fiyat-input').val(e.params.data.fiyat);
+                hesapla();
+            });
+        }
+
+        function satirSil(btn) {
+            $(btn).closest('tr').remove();
+            hesapla();
+        }
+
+        // Anlık Tutar Hesaplama
+        function hesapla() {
+            var genelToplam = 0;
+            $('.kalem-row').each(function () {
+                var miktar = parseFloat($(this).find('.miktar-input').val()) || 0;
+                var fiyat = parseFloat($(this).find('.fiyat-input').val()) || 0;
+                var tutar = miktar * fiyat;
+
+                $(this).find('.tutar-input').val(tutar.toFixed(2));
+                genelToplam += tutar;
+            });
+            $('#genelToplam').text(genelToplam.toFixed(2) + " ₺");
+        }
+
+        // JSON Formatında Backend'e POST İşlemi
+        function teklifiKaydet() {
+            var musteriId = $('#MusteriId').val();
+            if (!musteriId) {
+                Swal.fire('Eksik Bilgi', 'Lütfen bir müşteri seçiniz!', 'warning');
+                return;
+            }
+
+            var model = {
+                MusteriId: parseInt(musteriId),
+                Aciklama: $('#Aciklama').val(),
+                Kalemler: []
+            };
+
+            var gecerliSatirVarMi = false;
+            $('.kalem-row').each(function () {
+                var urunId = $(this).find('.urun-select').val();
+                var miktar = parseFloat($(this).find('.miktar-input').val()) || 0;
+                var fiyat = parseFloat($(this).find('.fiyat-input').val()) || 0;
+
+                if (urunId && miktar > 0) {
+                    gecerliSatirVarMi = true;
+                    model.Kalemler.push({ UrunId: parseInt(urunId), Miktar: miktar, BirimFiyat: fiyat });
+                }
+            });
+
+            if (!gecerliSatirVarMi) {
+                Swal.fire('Eksik Bilgi', 'Lütfen en az bir ürün seçiniz!', 'warning');
+                return;
+            }
+
+            // Butonu kilitle (Çift tıklamayı önlemek için)
+            $('#btnKaydet').prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-2"></i> Kaydediliyor...');
+
+            // AJAX İsteği
+            $.ajax({
+                url: '/Teklif/CreateForm',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(model),
+                success: function (res) {
+                    Swal.fire('Başarılı!', res.message, 'success').then(() => {
+                        window.location.href = '/Teklif/Index'; // Kayıttan sonra listeye dön
+                    });
+                },
+                error: function (err) {
+                    Swal.fire('Hata!', 'Kayıt sırasında bir hata oluştu.', 'error');
+                    $('#btnKaydet').prop('disabled', false).html('<i class="fa fa-save me-2"></i> Teklifi Kaydet');
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,28 @@
+﻿@using DevExpress.AspNetCore
+@{
+    ViewData["Title"] = "Rapor Tasarımcısı";
+}
+
+<link href="~/css/thirdparty.bundle.css" rel="stylesheet" />
+<link href="~/css/designer.part.bundle.css" rel="stylesheet" />
+<script src="~/js/thirdparty.bundle.js"></script>
+<script src="~/js/designer.part.bundle.js"></script>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="fa fa-paint-brush me-2 text-primary"></i> DevExpress Şablon Tasarımcısı</h4>
+        <a href="/Teklif/Index" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Listeye Dön
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0" style="height: 80vh;">
+        <div class="card-body p-0 h-100">
+
+            @(Html.DevExpress().ReportDesigner("reportDesigner")
+                .Height("100%")
+                .Bind(ViewBag.ReportId))
+
+        </div>
+    </div>
+</div>

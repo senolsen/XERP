@@ -1,0 +1,26 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using Core.Repositories;
+using Data.Context;
+
+namespace Data.Repositories
+{
+    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    {
+        protected readonly ApplicationDbContext _context;
+        private readonly DbSet<T> _dbSet;
+
+        public GenericRepository(ApplicationDbContext context)
+        {
+            _context = context;
+            _dbSet = _context.Set<T>();
+        }
+
+        public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
+        public IQueryable<T> GetAll() => _dbSet.AsNoTracking().AsQueryable();
+        public async Task<T> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
+        public void Remove(T entity) => _dbSet.Remove(entity);
+        public void Update(T entity) => _dbSet.Update(entity);
+        public IQueryable<T> Where(Expression<Func<T, bool>> expression) => _dbSet.Where(expression);
+    }
+}
