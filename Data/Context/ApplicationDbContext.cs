@@ -23,6 +23,8 @@ namespace Data.Context
         public DbSet<TeklifKalem> TeklifKalemleri { get; set; }
         public DbSet<Musteri> Musteriler { get; set; }
         public DbSet<Urun> Urunler { get; set; }
+        public DbSet<DovizKuru> DovizKurlari { get; set; }
+        public DbSet<ParaBirimi> ParaBirimleri { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,7 +33,7 @@ namespace Data.Context
             builder.Entity<Urun>().Property(x => x.GuncelFiyat).HasColumnType("decimal(18,2)");
             builder.Entity<Teklif>().Property(x => x.ToplamTutar).HasColumnType("decimal(18,2)");
             builder.Entity<TeklifKalem>().Property(x => x.BirimFiyat).HasColumnType("decimal(18,2)");
-            builder.Entity<TeklifKalem>().Property(x => x.Tutar).HasColumnType("decimal(18,2)");
+            builder.Entity<TeklifKalem>().Property(x => x.KdvTutari).HasColumnType("decimal(18,2)");
         }
 
         // Senkron kaydetme işlemi için araya giriyoruz

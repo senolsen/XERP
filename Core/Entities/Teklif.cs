@@ -3,14 +3,21 @@
     public class Teklif : BaseEntity
     {
         public string TeklifNo { get; set; }
-        // public string MusteriAdi { get; set; } // BUNU SİLİYORUZ
+        public DateTime Tarih { get; set; }
+        public DateTime? BaslangicTarihi { get; set; }
+        public DateTime? BitisTarihi { get; set; }
 
-        // YENİ EKLENEN (İlişki)
+        // YENİ: Para Birimi ve Kur
+        public string ParaBirimi { get; set; } = "TRY";
+        public decimal Kur { get; set; } = 1;
+
         public int MusteriId { get; set; }
         public virtual Musteri Musteri { get; set; }
+        public string? Aciklama { get; set; }
 
-        public DateTime Tarih { get; set; } = DateTime.Now;
-        public string Aciklama { get; set; }
+        public decimal AraToplam { get; set; }
+        public decimal ToplamIndirim { get; set; }
+        public decimal ToplamKdv { get; set; }
         public decimal ToplamTutar { get; set; }
 
         public virtual ICollection<TeklifKalem> Kalemler { get; set; } = new List<TeklifKalem>();

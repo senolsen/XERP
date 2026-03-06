@@ -4,6 +4,7 @@ using Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260306071904_mig_AddTeklifDetaylari")]
+    partial class mig_AddTeklifDetaylari
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,51 +129,6 @@ namespace Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Entities.DovizKuru", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Alis")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ParaBirimiId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Satis")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("Tarih")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParaBirimiId");
-
-                    b.ToTable("DovizKurlari");
-                });
-
             modelBuilder.Entity("Core.Entities.Musteri", b =>
                 {
                     b.Property<int>("Id")
@@ -219,52 +177,6 @@ namespace Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Musteriler");
-                });
-
-            modelBuilder.Entity("Core.Entities.ParaBirimi", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Ad")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Kod")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Sembol")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ParaBirimleri");
                 });
 
             modelBuilder.Entity("Core.Entities.ReportTemplate", b =>
@@ -344,15 +256,8 @@ namespace Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<decimal>("Kur")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("MusteriId")
                         .HasColumnType("int");
-
-                    b.Property<string>("ParaBirimi")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("Tarih")
                         .HasColumnType("datetime2");
@@ -360,9 +265,6 @@ namespace Data.Migrations
                     b.Property<string>("TeklifNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("ToplamIndirim")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("ToplamKdv")
                         .HasColumnType("decimal(18,2)");
@@ -391,9 +293,6 @@ namespace Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Aciklama")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("BirimFiyat")
                         .HasColumnType("decimal(18,2)");
 
@@ -402,12 +301,6 @@ namespace Data.Migrations
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("IndirimOrani")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("IndirimTutari")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -421,15 +314,8 @@ namespace Data.Migrations
                     b.Property<decimal>("KdvTutari")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("Kur")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("Miktar")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ParaBirimi")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SiraNo")
                         .HasColumnType("int");
@@ -448,9 +334,6 @@ namespace Data.Migrations
 
                     b.Property<int>("UrunId")
                         .HasColumnType("int");
-
-                    b.Property<string>("UrunKodu")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -615,17 +498,6 @@ namespace Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Entities.DovizKuru", b =>
-                {
-                    b.HasOne("Core.Entities.ParaBirimi", "ParaBirimi")
-                        .WithMany("Kurlar")
-                        .HasForeignKey("ParaBirimiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ParaBirimi");
-                });
-
             modelBuilder.Entity("Core.Entities.Teklif", b =>
                 {
                     b.HasOne("Core.Entities.Musteri", "Musteri")
@@ -705,11 +577,6 @@ namespace Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Core.Entities.ParaBirimi", b =>
-                {
-                    b.Navigation("Kurlar");
                 });
 
             modelBuilder.Entity("Core.Entities.Teklif", b =>

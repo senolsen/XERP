@@ -4,6 +4,7 @@ using Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260306095147_mig_AddMultiCurrencySupport")]
+    partial class mig_AddMultiCurrencySupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,8 +152,9 @@ namespace Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("ParaBirimiId")
-                        .HasColumnType("int");
+                    b.Property<string>("ParaBirimi")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Satis")
                         .HasColumnType("decimal(18,2)");
@@ -165,8 +169,6 @@ namespace Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ParaBirimiId");
 
                     b.ToTable("DovizKurlari");
                 });
@@ -615,17 +617,6 @@ namespace Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Core.Entities.DovizKuru", b =>
-                {
-                    b.HasOne("Core.Entities.ParaBirimi", "ParaBirimi")
-                        .WithMany("Kurlar")
-                        .HasForeignKey("ParaBirimiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ParaBirimi");
-                });
-
             modelBuilder.Entity("Core.Entities.Teklif", b =>
                 {
                     b.HasOne("Core.Entities.Musteri", "Musteri")
@@ -705,11 +696,6 @@ namespace Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Core.Entities.ParaBirimi", b =>
-                {
-                    b.Navigation("Kurlar");
                 });
 
             modelBuilder.Entity("Core.Entities.Teklif", b =>

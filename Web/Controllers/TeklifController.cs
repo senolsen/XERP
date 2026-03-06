@@ -13,36 +13,37 @@ namespace WebUI.Controllers
         private readonly IGenericRepository<Teklif> _teklifRepository;
         private readonly IGenericRepository<Musteri> _musteriRepository;
         private readonly IGenericRepository<Urun> _urunRepository;
-
-        // YENİ EKLENEN: Açılır menüye şablonları gönderebilmek için ReportTemplate repository'si
         private readonly IGenericRepository<ReportTemplate> _templateRepository;
+        private readonly IDovizService _dovizService;
+        private readonly IGenericRepository<ParaBirimi> _paraBirimiRepository;
 
-        // Constructor'a templateRepository eklendi
         public TeklifController(
             ITeklifService teklifService,
             IGenericRepository<Teklif> teklifRepository,
             IGenericRepository<Musteri> musteriRepository,
             IGenericRepository<Urun> urunRepository,
-            IGenericRepository<ReportTemplate> templateRepository)
+            IGenericRepository<ReportTemplate> templateRepository,
+            IDovizService dovizService,
+            IGenericRepository<ParaBirimi> paraBirimiRepository)
         {
             _teklifService = teklifService;
             _teklifRepository = teklifRepository;
             _musteriRepository = musteriRepository;
             _urunRepository = urunRepository;
-            _templateRepository = templateRepository; // ATAMASI YAPILDI
+            _templateRepository = templateRepository;
+            _dovizService = dovizService;
+            _paraBirimiRepository = paraBirimiRepository;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // 1. Teklifleri Çekiyoruz
             var teklifler = await _teklifRepository.GetAll()
                 .Include(x => x.Musteri)
                 .Where(x => x.IsActive && !x.IsDeleted)
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();
 
-            // 2. DİKKAT: Veritabanındaki aktif Teklif şablonlarını çekip ViewBag'e atıyoruz (Açılır menü için)
             ViewBag.Templates = await _templateRepository
                 .Where(x => x.DocumentType == Core.Enums.DocumentType.Teklif && x.IsActive && !x.IsDeleted)
                 .ToListAsync();
@@ -50,15 +51,25 @@ namespace WebUI.Controllers
             return View(teklifler);
         }
 
-        // 1. ARAYÜZÜ GETİR
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewBag.TeklifNo = "TKL-" + DateTime.Now.ToString("yyyyMMdd-HHmm");
+            // DİKKAT: Tablo boşsa Merkez Bankasından tüm kurları çeker (1 Kez Çalışır)
+            await _dovizService.ParaBirimleriniTcmbdenSenkronizeEtAsync();
+
+            ViewBag.TeklifNo = await _teklifService.GetNextTeklifNoAsync();
+
+            // Sadece Aktif olarak ayarlanmış para birimlerini arayüze gönder
+            ViewBag.ParaBirimleri = await _paraBirimiRepository
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .OrderByDescending(x => x.IsDefault)
+                .ToListAsync();
+
+            ViewBag.Kurlar = await _dovizService.GetGunlukKurlarAsync();
+
             return View();
         }
 
-        // 2. MÜŞTERİ ARAMA (Select2 AJAX için)
         [HttpGet]
         public async Task<IActionResult> SearchMusteri(string q)
         {
@@ -77,7 +88,6 @@ namespace WebUI.Controllers
             return Json(new { results = data });
         }
 
-        // 3. ÜRÜN ARAMA (Select2 AJAX için)
         [HttpGet]
         public async Task<IActionResult> SearchUrun(string q)
         {
@@ -91,13 +101,13 @@ namespace WebUI.Controllers
             var data = await query.Take(20).Select(x => new {
                 id = x.Id,
                 text = x.UrunAdi + " (" + x.UrunKodu + ")",
+                kod = x.UrunKodu,
                 fiyat = x.GuncelFiyat
             }).ToListAsync();
 
             return Json(new { results = data });
         }
 
-        // 4. TEKLİFİ KAYDET (AJAX Post ile)
         [HttpPost]
         public async Task<IActionResult> CreateForm([FromBody] TeklifCreateViewModel model)
         {
@@ -108,12 +118,20 @@ namespace WebUI.Controllers
 
             var kalemler = model.Kalemler.Select(k => new TeklifKalem
             {
+                SiraNo = k.SiraNo,
+                UrunKodu = k.UrunKodu,
+                Aciklama = k.Aciklama,
                 UrunId = k.UrunId,
                 Miktar = k.Miktar,
-                BirimFiyat = k.BirimFiyat
+                BirimFiyat = k.BirimFiyat,
+                ParaBirimi = k.ParaBirimi,
+                Kur = k.Kur,
+                IndirimOrani = k.IndirimOrani,
+                KdvOrani = k.KdvOrani
             }).ToList();
 
-            var sonuc = await _teklifService.TeklifOlusturAsync(model.MusteriId, model.Aciklama, kalemler);
+            var sonuc = await _teklifService.TeklifOlusturAsync(
+                model.MusteriId, model.Aciklama, model.BaslangicTarihi, model.BitisTarihi, model.ParaBirimi, model.Kur, kalemler);
 
             return Ok(new { message = "Teklif başarıyla oluşturuldu!", teklifId = sonuc.Id });
         }

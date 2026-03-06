@@ -1,206 +1,330 @@
 ﻿@{
-    ViewData["Title"] = "Yeni Teklif";
-    // Layout = null;
+    ViewData["Title"] = "Yeni Teklif Oluştur";
 }
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-<div class="container-fluid mt-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white pt-4 pb-2 border-bottom-0">
-            <h4 class="text-primary"><i class="fa fa-file-invoice-dollar me-2"></i>Yeni Teklif Hazırlama Formu</h4>
-        </div>
-        <div class="card-body">
+<div class="container-fluid mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary"><i class="fa fa-file-signature me-2"></i>Yeni Teklif Oluştur</h3>
+        <span class="badge bg-secondary fs-6 py-2 px-3">Teklif No: @ViewBag.TeklifNo</span>
+    </div>
 
-            <div class="row mb-4 bg-light p-3 rounded mx-0">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-light">
+            <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Müşteri Seçin (AJAX Arama)</label>
-                    <select id="MusteriId" class="form-select"></select>
+                    <label class="form-label fw-bold">Müşteri (Cari) Seçimi *</label>
+                    <select id="musteriSecici" class="form-control w-100"></select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label fw-bold">Teklif No</label>
-                    <input type="text" class="form-control bg-white" value="@ViewBag.TeklifNo" readonly />
+                    <label class="form-label fw-bold">Başlangıç Tarihi</label>
+                    <input type="date" id="baslangicTarihi" class="form-control" />
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label fw-bold">Tarih</label>
-                    <input type="text" class="form-control bg-white" value="@DateTime.Now.ToString("dd.MM.yyyy")" readonly />
-                </div>
-                <div class="col-md-12">
-                    <label class="form-label fw-bold">Teklif Açıklaması / Özel Notlar</label>
-                    <textarea id="Aciklama" class="form-control" rows="2" placeholder="Örn: Bu teklif 15 gün geçerlidir..."></textarea>
+                    <label class="form-label fw-bold">Geçerlilik Bitiş</label>
+                    <input type="date" id="bitisTarihi" class="form-control" />
                 </div>
             </div>
+        </div>
+    </div>
 
-            <h5 class="mb-3 text-secondary border-bottom pb-2">Ürün ve Hizmet Kalemleri</h5>
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle" id="kalemTable">
-                    <thead class="table-light">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0 text-dark"><i class="fa fa-boxes me-2"></i>Ürün ve Hizmet Kalemleri</h5>
+            <button class="btn btn-sm btn-success shadow-sm" id="btnYeniSatir">
+                <i class="fa fa-plus me-1"></i> En Alta Satır Ekle
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="overflow: visible; min-height: 250px;">
+                <table class="table table-sm table-hover align-middle mb-0" id="kalemlerTable">
+                    <thead class="table-light fs-6">
                         <tr>
-                            <th width="45%">Ürün/Hizmet Ara...</th>
-                            <th width="15%">Miktar</th>
-                            <th width="15%">Birim Fiyat (₺)</th>
-                            <th width="15%">Satır Tutarı (₺)</th>
-                            <th width="10%" class="text-center">İşlem</th>
+                            <th width="3%" class="text-center px-1">#</th>
+                            <th width="12%" class="px-1">Ürün Kodu</th>
+                            <th width="21%" class="px-1">Ürün / Hizmet</th>
+                            <th width="13%" class="px-1">Açıklama</th>
+                            <th width="5%" class="px-1">Miktar</th>
+                            <th width="9%" class="px-1">Br. Fiyat</th>
+                            <th width="6%" class="text-center px-1">P. Birim</th>
+                            <th width="5%" class="px-1">İnd.%</th>
+                            <th width="6%" class="text-center px-1">KDV</th>
+                            <th width="11%" class="px-1">Tutar</th>
+                            <th width="9%" class="text-center px-1">İşlem</th>
                         </tr>
                     </thead>
-                    <tbody id="kalemBody">
+                    <tbody>
                     </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3" class="text-end fw-bold fs-5 align-middle">Genel Toplam:</td>
-                            <td colspan="2" class="fw-bold fs-4 text-success align-middle" id="genelToplam">0.00 ₺</td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
-
-            <button type="button" class="btn btn-outline-primary mb-4" onclick="satirEkle()">
-                <i class="fa fa-plus me-1"></i> Yeni Satır Ekle
-            </button>
-
-            <hr />
-            <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-success btn-lg px-5 shadow" id="btnKaydet" onclick="teklifiKaydet()">
-                    <i class="fa fa-save me-2"></i> Teklifi Kaydet
-                </button>
-            </div>
-
         </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <label class="form-label fw-bold">Genel Şartlar / Açıklama</label>
+                    <textarea id="aciklama" class="form-control" rows="6" placeholder="Teklif şartları, teslimat koşulları vs..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body bg-light rounded">
+                    <h6 class="text-muted fw-bold mb-3 border-bottom pb-2"><i class="fa fa-percent me-1"></i>KDV Dağılımı (Belge Dövizi)</h6>
+                    <table class="table table-sm table-borderless mb-0 fs-6">
+                        <tr id="rowKdvYok"><td class="text-muted fst-italic text-center pt-3">KDV'li ürün bulunmuyor.</td></tr>
+                        <tr id="rowKdv1" style="display:none;"><td class="text-start text-muted">KDV (%1):</td><td class="text-end fw-bold" id="lblKdv1">0.00</td></tr>
+                        <tr id="rowKdv10" style="display:none;"><td class="text-start text-muted">KDV (%10):</td><td class="text-end fw-bold" id="lblKdv10">0.00</td></tr>
+                        <tr id="rowKdv20" style="display:none;"><td class="text-start text-muted">KDV (%20):</td><td class="text-end fw-bold" id="lblKdv20">0.00</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body bg-light rounded">
+                    <h6 class="text-muted fw-bold mb-3 border-bottom pb-2"><i class="fa fa-calculator me-1"></i>Özet Toplamlar</h6>
+
+                    <div class="input-group input-group-sm mb-3 shadow-sm">
+                        <span class="input-group-text bg-white fw-bold">Belge PB</span>
+                        <select id="dipParaBirimi" class="form-select bg-white">
+                            @if (ViewBag.ParaBirimleri != null)
+                            {
+                                foreach (var pb in (List<Core.Entities.ParaBirimi>)ViewBag.ParaBirimleri)
+                                {
+                                    <option value="@pb.Kod" data-sembol="@pb.Sembol" selected="@pb.IsDefault">@pb.Kod</option>
+                                }
+                            }
+                        </select>
+                        <input type="hidden" id="dipAktifKur" value="1.0000" />
+                    </div>
+
+                    <table class="table table-sm table-borderless mb-0 fs-6">
+                        <tr><td class="text-start text-muted">Ara Toplam:</td><th class="text-end" id="lblAraToplam">0.00</th></tr>
+                        <tr id="rowIndirim" class="text-danger" style="display:none;"><td class="text-start pb-2">Top. İndirim:</td><th class="text-end pb-2" id="lblToplamIndirim">-0.00</th></tr>
+                        <tr class="border-top"><td class="text-start text-muted pt-2 pb-3">Toplam KDV:</td><th class="text-end pt-2 pb-3" id="lblToplamKdv">0.00</th></tr>
+                        <tr class="border-top border-2 border-dark"><td class="text-start fs-5 pt-3 fw-bold">Genel Toplam:</td><th class="text-end fs-5 text-success pt-3 pb-0" id="lblGenelToplam">0.00</th></tr>
+                        <tr><td colspan="2" class="text-end text-muted fst-italic pt-0 pb-0" style="font-size: 0.8rem;" id="lblSembol">TL</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4 gap-2">
+        <a href="/Teklif/Index" class="btn btn-light border shadow-sm">İptal Et</a>
+        <button id="btnKaydet" class="btn btn-primary px-4 shadow-sm"><i class="fa fa-save me-1"></i> Kaydet</button>
+        <button id="btnKaydetOnizle" class="btn btn-warning text-dark px-4 shadow-sm fw-bold"><i class="fa fa-file-pdf me-1"></i> Kaydet ve Önizle</button>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
         $(document).ready(function () {
-            // Müşteri Arama (Select2)
-            $('#MusteriId').select2({
-                theme: 'bootstrap-5',
-                placeholder: "Firma unvanı veya vergi no yazın...",
-                minimumInputLength: 2,
-                ajax: {
-                    url: '/Teklif/SearchMusteri',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) { return { q: params.term }; },
-                    processResults: function (data) { return { results: data.results }; }
+
+            var kurSozlugu = { "TRY": 1 };
+            var pbOptionsHtml = "";
+
+        @if (ViewBag.ParaBirimleri != null)
+        {
+            foreach (var pb in (List<Core.Entities.ParaBirimi>)ViewBag.ParaBirimleri)
+            {
+                <text>pbOptionsHtml += '<option value="@pb.Kod">@pb.Kod</option>';</text>
+            }
+        }
+        @if (ViewBag.Kurlar != null)
+        {
+            foreach (var k in (List<Core.Entities.DovizKuru>)ViewBag.Kurlar)
+            {
+                if (k.ParaBirimi != null)
+                {
+                    string strKur = k.Satis.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture);
+                    <text>kurSozlugu["@k.ParaBirimi.Kod"] = @strKur;</text>
                 }
-            });
+            }
+        }
 
-            // Sayfa açılırken ilk boş satırı otomatik ekle
-            satirEkle();
-        });
+            if($('#dipParaBirimi').length > 0) {
+                $('#lblSembol').text($('#dipParaBirimi').find(':selected').data('sembol') || 'TL');
+                $('#dipAktifKur').val(kurSozlugu[$('#dipParaBirimi').val()] || 1);
+            }
 
-        // Dinamik Satır Ekleme İşlemi
-        function satirEkle() {
-            var tr = `
-                <tr class="kalem-row">
-                    <td><select class="form-select urun-select"></select></td>
-                    <td><input type="number" class="form-control miktar-input" value="1" min="1" onkeyup="hesapla()" onchange="hesapla()"></td>
-                    <td><input type="number" step="0.01" class="form-control fiyat-input" value="0.00" onkeyup="hesapla()" onchange="hesapla()"></td>
-                    <td><input type="text" class="form-control tutar-input text-end bg-light fw-bold" value="0.00" readonly></td>
-                    <td class="text-center"><button type="button" class="btn btn-sm btn-danger" onclick="satirSil(this)"><i class="fa fa-trash"></i></button></td>
-                </tr>
-            `;
-
-            $('#kalemBody').append(tr);
-            var lastRow = $('#kalemBody tr').last();
-            var selectElement = lastRow.find('.urun-select');
-
-            // Yeni eklenen satırdaki ürün arama motorunu (Select2) aktif et
-            selectElement.select2({
-                theme: 'bootstrap-5',
-                placeholder: "Ürün ara...",
-                minimumInputLength: 2,
-                ajax: {
-                    url: '/Teklif/SearchUrun',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) { return { q: params.term }; },
-                    processResults: function (data) { return { results: data.results }; }
-                }
-            });
-
-            // Ürün seçildiğinde, API'den gelen fiyati Input'a otomatik yaz
-            selectElement.on('select2:select', function (e) {
-                var row = $(this).closest('tr');
-                row.find('.fiyat-input').val(e.params.data.fiyat);
+            $('#dipParaBirimi').change(function() {
+                let pb = $(this).val();
+                $('#dipAktifKur').val((kurSozlugu[pb] || 1).toFixed(4));
+                $('#lblSembol').text($(this).find(':selected').data('sembol'));
                 hesapla();
             });
-        }
 
-        function satirSil(btn) {
-            $(btn).closest('tr').remove();
-            hesapla();
-        }
+            $('#dipAktifKur').change(function() { hesapla(); });
 
-        // Anlık Tutar Hesaplama
-        function hesapla() {
-            var genelToplam = 0;
-            $('.kalem-row').each(function () {
-                var miktar = parseFloat($(this).find('.miktar-input').val()) || 0;
-                var fiyat = parseFloat($(this).find('.fiyat-input').val()) || 0;
-                var tutar = miktar * fiyat;
-
-                $(this).find('.tutar-input').val(tutar.toFixed(2));
-                genelToplam += tutar;
+            $('#musteriSecici').select2({
+                placeholder: 'Müşteri Ara...',
+                ajax: { url: '/Teklif/SearchMusteri', dataType: 'json', delay: 250, data: function (params) { return { q: params.term }; }, processResults: function (data) { return { results: data.results }; } }
             });
-            $('#genelToplam').text(genelToplam.toFixed(2) + " ₺");
-        }
 
-        // JSON Formatında Backend'e POST İşlemi
-        function teklifiKaydet() {
-            var musteriId = $('#MusteriId').val();
-            if (!musteriId) {
-                Swal.fire('Eksik Bilgi', 'Lütfen bir müşteri seçiniz!', 'warning');
-                return;
+            function initUrunSelect2(element) {
+                $(element).select2({
+                    placeholder: 'Ürün/Hizmet...',
+                    dropdownParent: $(element).parent(),
+                    ajax: { url: '/Teklif/SearchUrun', dataType: 'json', delay: 250, data: function (params) { return { q: params.term }; }, processResults: function (data) { return { results: data.results }; } }
+                }).on('select2:select', function (e) {
+                    var tr = $(this).closest('tr');
+                    tr.find('.urun-kodu').val(e.params.data.kod);
+
+                    let satirPB = tr.find('.satir-para-birimi').val();
+                    let satirKur = kurSozlugu[satirPB] || 1;
+                    tr.find('.fiyat').val((e.params.data.fiyat / satirKur).toFixed(2));
+
+                    hesapla();
+                });
             }
 
-            var model = {
-                MusteriId: parseInt(musteriId),
-                Aciklama: $('#Aciklama').val(),
-                Kalemler: []
-            };
+            function yeniSatirEkle(hedefSatir = null) {
+                // DİKKAT: Bütün td'lere ve inputlara px-1 (yatay minimum boşluk) eklendi
+                var tr = `
+                    <tr>
+                        <td class="align-middle text-center fw-bold text-muted sira-no px-1"></td>
+                        <td class="px-1"><input type="text" class="form-control form-control-sm urun-kodu px-1" placeholder="Kod"></td>
+                        <td class="px-1"><select class="form-control form-control-sm urun-secici"></select></td>
+                        <td class="px-1"><input type="text" class="form-control form-control-sm aciklama px-1" placeholder="Açıklama..."></td>
+                        <td class="px-1"><input type="number" class="form-control form-control-sm miktar text-end px-1" value="1" min="1"></td>
+                        <td class="px-1"><input type="number" class="form-control form-control-sm fiyat text-end px-1" value="0.00" step="0.01"></td>
+                        <td class="text-center px-1">
+                            <select class="form-select form-select-sm satir-para-birimi mx-auto" style="width: auto; padding-left:0.2rem; padding-right:1.2rem; background-position: right 0.2rem center;">` + pbOptionsHtml + `</select>
+                        </td>
+                        <td class="px-1"><input type="number" class="form-control form-control-sm indirim-orani text-end px-1" value="0" min="0" max="100"></td>
+                        <td class="text-center px-1">
+                            <select class="form-select form-select-sm kdv-orani mx-auto" style="width: auto; padding-left:0.2rem; padding-right:1.2rem; background-position: right 0.2rem center;">
+                                <option value="0">%0</option>
+                                <option value="1">%1</option>
+                                <option value="10">%10</option>
+                                <option value="20" selected>%20</option>
+                            </select>
+                        </td>
+                        <td class="px-1"><input type="text" class="form-control form-control-sm text-end fw-bold satir-toplam bg-light text-secondary px-1" value="0.00" readonly tabindex="-1"></td>
+                        <td class="text-center align-middle px-1">
+                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
+                                <button type="button" class="btn btn-light border text-success btn-insert p-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px;" title="Araya Ekle"><i class="fa fa-plus" style="font-size: 11px;"></i></button>
+                                <button type="button" class="btn btn-light border btn-up p-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px;" title="Yukarı Taşı"><i class="fa fa-chevron-up" style="font-size: 11px;"></i></button>
+                                <button type="button" class="btn btn-light border btn-down p-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px;" title="Aşağı Taşı"><i class="fa fa-chevron-down" style="font-size: 11px;"></i></button>
+                                <button type="button" class="btn btn-danger btn-sil p-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px;" title="Sil"><i class="fa fa-times" style="font-size: 11px;"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
 
-            var gecerliSatirVarMi = false;
-            $('.kalem-row').each(function () {
-                var urunId = $(this).find('.urun-select').val();
-                var miktar = parseFloat($(this).find('.miktar-input').val()) || 0;
-                var fiyat = parseFloat($(this).find('.fiyat-input').val()) || 0;
-
-                if (urunId && miktar > 0) {
-                    gecerliSatirVarMi = true;
-                    model.Kalemler.push({ UrunId: parseInt(urunId), Miktar: miktar, BirimFiyat: fiyat });
-                }
-            });
-
-            if (!gecerliSatirVarMi) {
-                Swal.fire('Eksik Bilgi', 'Lütfen en az bir ürün seçiniz!', 'warning');
-                return;
+                var el = hedefSatir ? $(tr).insertAfter(hedefSatir) : $(tr).appendTo('#kalemlerTable tbody');
+                initUrunSelect2(el.find('.urun-secici'));
+                sirala();
             }
 
-            // Butonu kilitle (Çift tıklamayı önlemek için)
-            $('#btnKaydet').prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-2"></i> Kaydediliyor...');
+            yeniSatirEkle();
+            $('#btnYeniSatir').click(function () { yeniSatirEkle(); });
+            $(document).on('click', '.btn-insert', function () { yeniSatirEkle($(this).closest('tr')); });
 
-            // AJAX İsteği
-            $.ajax({
-                url: '/Teklif/CreateForm',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(model),
-                success: function (res) {
-                    Swal.fire('Başarılı!', res.message, 'success').then(() => {
-                        window.location.href = '/Teklif/Index'; // Kayıttan sonra listeye dön
-                    });
-                },
-                error: function (err) {
-                    Swal.fire('Hata!', 'Kayıt sırasında bir hata oluştu.', 'error');
-                    $('#btnKaydet').prop('disabled', false).html('<i class="fa fa-save me-2"></i> Teklifi Kaydet');
-                }
-            });
-        }
+            function sirala() { $('#kalemlerTable tbody tr').each(function (index) { $(this).find('.sira-no').text(index + 1); }); hesapla(); }
+
+            $(document).on('click', '.btn-up', function() { var row = $(this).closest('tr'); row.prev().before(row); sirala(); });
+            $(document).on('click', '.btn-down', function() { var row = $(this).closest('tr'); row.next().after(row); sirala(); });
+            $(document).on('click', '.btn-sil', function () { if ($('#kalemlerTable tbody tr').length > 1) { $(this).closest('tr').remove(); sirala(); } else { alert('En az 1 satır olmalı!'); } });
+
+            $(document).on('change', '.satir-para-birimi', function() { hesapla(); });
+            $(document).on('input change', '.miktar, .fiyat, .indirim-orani, .kdv-orani, .satir-para-birimi', function () { hesapla(); });
+
+            function hesapla() {
+                let docRate = parseFloat($('#dipAktifKur').val()) || 1;
+                let araToplam = 0, toplamIndirim = 0, kdv1 = 0, kdv10 = 0, kdv20 = 0;
+
+                $('#kalemlerTable tbody tr').each(function () {
+                    let miktar = parseFloat($(this).find('.miktar').val()) || 0;
+                    let fiyat = parseFloat($(this).find('.fiyat').val()) || 0;
+                    let indirimOrani = parseFloat($(this).find('.indirim-orani').val()) || 0;
+                    let kdv = parseInt($(this).find('.kdv-orani').val()) || 0;
+
+                    let satirPB = $(this).find('.satir-para-birimi').val();
+                    let satirKur = kurSozlugu[satirPB] || 1;
+
+                    let brut = miktar * fiyat;
+                    let indirimTutar = brut * (indirimOrani / 100);
+                    let net = brut - indirimTutar;
+                    let kdvTutar = net * (kdv / 100);
+
+                    $(this).find('.satir-toplam').val((net + kdvTutar).toFixed(2));
+
+                    let docBrut = (brut * satirKur) / docRate;
+                    let docIndirim = (indirimTutar * satirKur) / docRate;
+                    let docKdv = (kdvTutar * satirKur) / docRate;
+
+                    araToplam += docBrut;
+                    toplamIndirim += docIndirim;
+
+                    if (kdv === 1) kdv1 += docKdv;
+                    else if (kdv === 10) kdv10 += docKdv;
+                    else if (kdv === 20) kdv20 += docKdv;
+                });
+
+                let toplamKdv = kdv1 + kdv10 + kdv20;
+                let genelToplam = (araToplam - toplamIndirim) + toplamKdv;
+
+                $('#lblAraToplam').text(araToplam.toFixed(2));
+                $('#lblToplamIndirim').text('-' + toplamIndirim.toFixed(2));
+                $('#lblKdv1').text(kdv1.toFixed(2));
+                $('#lblKdv10').text(kdv10.toFixed(2));
+                $('#lblKdv20').text(kdv20.toFixed(2));
+                $('#lblToplamKdv').text(toplamKdv.toFixed(2));
+                $('#lblGenelToplam').text(genelToplam.toFixed(2));
+
+                $('#rowKdv1').toggle(kdv1 > 0); $('#rowKdv10').toggle(kdv10 > 0); $('#rowKdv20').toggle(kdv20 > 0);
+                $('#rowKdvYok').toggle(toplamKdv === 0); $('#rowIndirim').toggle(toplamIndirim > 0);
+            }
+
+            function teklifKaydet(isOzelPreview) {
+                let kalemler = [];
+                $('#kalemlerTable tbody tr').each(function () {
+                    let urunId = $(this).find('.urun-secici').val();
+                    let pb = $(this).find('.satir-para-birimi').val();
+
+                    if (urunId) {
+                        kalemler.push({
+                            SiraNo: parseInt($(this).find('.sira-no').text()),
+                            UrunKodu: $(this).find('.urun-kodu').val(),
+                            Aciklama: $(this).find('.aciklama').val(),
+                            UrunId: parseInt(urunId),
+                            Miktar: parseFloat($(this).find('.miktar').val()),
+                            BirimFiyat: parseFloat($(this).find('.fiyat').val()),
+                            ParaBirimi: pb,
+                            Kur: kurSozlugu[pb] || 1,
+                            IndirimOrani: parseInt($(this).find('.indirim-orani').val()) || 0,
+                            KdvOrani: parseInt($(this).find('.kdv-orani').val())
+                        });
+                    }
+                });
+
+                if (kalemler.length === 0) return alert('Lütfen en az 1 ürün seçin!');
+
+                let data = {
+                    MusteriId: $('#musteriSecici').val(),
+                    BaslangicTarihi: $('#baslangicTarihi').val(),
+                    BitisTarihi: $('#bitisTarihi').val(),
+                    Aciklama: $('#aciklama').val(),
+                    ParaBirimi: $('#dipParaBirimi').val(),
+                    Kur: parseFloat($('#dipAktifKur').val()),
+                    Kalemler: kalemler
+                };
+
+                $.ajax({
+                    url: '/Teklif/CreateForm', type: 'POST', contentType: 'application/json', data: JSON.stringify(data),
+                    success: function (res) { window.location.href = isOzelPreview ? '/DocumentViewer/TeklifYazdir/' + res.teklifId : '/Teklif/Index'; },
+                    error: function () { alert('Hata oluştu!'); }
+                });
+            }
+
+            $('#btnKaydet').click(function () { teklifKaydet(false); });
+            $('#btnKaydetOnizle').click(function () { teklifKaydet(true); });
+        });
     </script>
 }

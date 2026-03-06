@@ -11,7 +11,15 @@ namespace Core.DTOs.Reporting
     {
         public string TeklifNo { get; set; }
         public DateTime Tarih { get; set; }
-        public decimal ToplamTutar { get; set; }
+
+        // YENİ: Başlangıç ve Bitiş Tarihleri
+        public DateTime? BaslangicTarihi { get; set; }
+        public DateTime? BitisTarihi { get; set; }
+
+        // YENİ: Finansal Detaylar
+        public decimal AraToplam { get; set; }
+        public decimal ToplamKdv { get; set; }
+        public decimal ToplamTutar { get; set; } // Genel Toplam
 
         // Müşteri Entity'sine gitmek yerine sadece raporda lazım olanları aldık
         public string MusteriUnvan { get; set; }

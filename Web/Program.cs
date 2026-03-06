@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Core.Entities;
 using Data.Context;
 using WebUI.Data;
+using Core.Services;
+using Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,7 @@ DevExpress.Utils.DeserializationSettings.RegisterTrustedAssembly(typeof(Core.DTO
 // 1. EF Core & SQL Server Baðlantýsý
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("XERP.Data"))); // Migrations Data katmanýnda tutulacak
+        b => b.MigrationsAssembly("Data"))); // Migrations Data katmanýnda tutulacak
 
 // BUNU EKLÝYORUZ: Giriþ yapan kullanýcý bilgilerine her katmandan eriþebilmek için
 builder.Services.AddHttpContextAccessor();
@@ -38,7 +40,8 @@ builder.Services.AddControllersWithViews();
 // Mimari Servis Kayýtlarý
 builder.Services.AddScoped<Core.UnitOfWorks.IUnitOfWork, Data.UnitOfWorks.UnitOfWork>();
 builder.Services.AddScoped(typeof(Core.Repositories.IGenericRepository<>), typeof(Data.Repositories.GenericRepository<>));
-builder.Services.AddScoped<Core.Services.ITeklifService, Service.Services.TeklifService>();
+builder.Services.AddScoped<ITeklifService, TeklifService>();
+builder.Services.AddScoped<IDovizService, DovizService>();
 
 builder.Services.ConfigureReportingServices(configurator => {
     configurator.ConfigureReportDesigner(designerConfigurator => {
