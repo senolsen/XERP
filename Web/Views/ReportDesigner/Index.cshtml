@@ -1,7 +1,12 @@
 ﻿@using DevExpress.AspNetCore
+@model Dictionary<string, object>
+
 @{
     ViewData["Title"] = "Rapor Tasarımcısı";
     Layout = null;
+
+    // HATAYI ÇÖZEN KISIM: ViewBag değerini açıkça string'e çeviriyoruz
+    string reportId = ViewBag.ReportId as string ?? "Yeni_Tasarim";
 }
 
 <link href="~/css/thirdparty.bundle.css" rel="stylesheet" />
@@ -22,7 +27,18 @@
 
             @(Html.DevExpress().ReportDesigner("reportDesigner")
                 .Height("100%")
-                .Bind(ViewBag.ReportId))
+                .Bind(reportId) @* Artık dynamic değil, doğrudan string verdik *@
+                .DataSources(configure =>
+                {
+                    if (Model != null)
+                    {
+                        foreach (var ds in Model)
+                        {
+                            configure.Add(ds.Key, ds.Value);
+                        }
+                    }
+                })
+                )
 
         </div>
     </div>

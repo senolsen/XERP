@@ -13,16 +13,19 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body bg-light">
             <div class="row">
+
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Müşteri (Cari) Seçimi *</label>
                     <select id="musteriSecici" class="form-control w-100"></select>
                 </div>
                 <div class="col-md-3 mb-3">
+
                     <label class="form-label fw-bold">Başlangıç Tarihi</label>
                     <input type="date" id="baslangicTarihi" class="form-control" />
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label fw-bold">Geçerlilik Bitiş</label>
+
                     <input type="date" id="bitisTarihi" class="form-control" />
                 </div>
             </div>
@@ -32,6 +35,7 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
             <h5 class="mb-0 text-dark"><i class="fa fa-boxes me-2"></i>Ürün ve Hizmet Kalemleri</h5>
+
             <button class="btn btn-sm btn-success shadow-sm" id="btnYeniSatir">
                 <i class="fa fa-plus me-1"></i> En Alta Satır Ekle
             </button>
@@ -103,11 +107,25 @@
                     </div>
 
                     <table class="table table-sm table-borderless mb-0 fs-6">
-                        <tr><td class="text-start text-muted">Ara Toplam:</td><th class="text-end" id="lblAraToplam">0.00</th></tr>
-                        <tr id="rowIndirim" class="text-danger" style="display:none;"><td class="text-start pb-2">Top. İndirim:</td><th class="text-end pb-2" id="lblToplamIndirim">-0.00</th></tr>
-                        <tr class="border-top"><td class="text-start text-muted pt-2 pb-3">Toplam KDV:</td><th class="text-end pt-2 pb-3" id="lblToplamKdv">0.00</th></tr>
-                        <tr class="border-top border-2 border-dark"><td class="text-start fs-5 pt-3 fw-bold">Genel Toplam:</td><th class="text-end fs-5 text-success pt-3 pb-0" id="lblGenelToplam">0.00</th></tr>
-                        <tr><td colspan="2" class="text-end text-muted fst-italic pt-0 pb-0" style="font-size: 0.8rem;" id="lblSembol">TL</td></tr>
+                        <tr>
+                            <td class="text-start text-muted">Ara Toplam:</td>
+                            <th class="text-end" id="lblAraToplam">0.00</th>
+                        </tr>
+                        <tr id="rowIndirim" class="text-danger" style="display:none;">
+                            <td class="text-start pb-1">Top. İndirim:</td>
+                            <th class="text-end pb-1" id="lblToplamIndirim">-0.00</th>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="text-start text-muted py-1">Toplam KDV:</td>
+                            <th class="text-end py-1" id="lblToplamKdv">0.00</th>
+                        </tr>
+                        <tr class="border-top border-2 border-dark">
+                            <td class="text-start fs-5 py-2 fw-bold align-middle">Genel Toplam:</td>
+                            <th class="text-end fs-5 text-success py-2 align-middle">
+                                <span id="lblGenelToplam">0.00</span>
+                                <small class="text-muted fst-italic ms-1" style="font-size: 0.9rem;" id="lblSembol">TL</small>
+                            </th>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -159,14 +177,12 @@
                 $('#lblSembol').text($(this).find(':selected').data('sembol'));
                 hesapla();
             });
-
             $('#dipAktifKur').change(function() { hesapla(); });
 
             $('#musteriSecici').select2({
                 placeholder: 'Müşteri Ara...',
                 ajax: { url: '/Teklif/SearchMusteri', dataType: 'json', delay: 250, data: function (params) { return { q: params.term }; }, processResults: function (data) { return { results: data.results }; } }
             });
-
             function initUrunSelect2(element) {
                 $(element).select2({
                     placeholder: 'Ürün/Hizmet...',
@@ -231,7 +247,6 @@
             $(document).on('click', '.btn-up', function() { var row = $(this).closest('tr'); row.prev().before(row); sirala(); });
             $(document).on('click', '.btn-down', function() { var row = $(this).closest('tr'); row.next().after(row); sirala(); });
             $(document).on('click', '.btn-sil', function () { if ($('#kalemlerTable tbody tr').length > 1) { $(this).closest('tr').remove(); sirala(); } else { alert('En az 1 satır olmalı!'); } });
-
             $(document).on('change', '.satir-para-birimi', function() { hesapla(); });
             $(document).on('input change', '.miktar, .fiyat, .indirim-orani, .kdv-orani, .satir-para-birimi', function () { hesapla(); });
 

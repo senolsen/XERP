@@ -1,85 +1,259 @@
 ﻿@model IEnumerable<Core.Entities.Teklif>
+
 @{
-    ViewData["Title"] = "Teklifler";
+    ViewData["Title"] = "Teklif Listesi";
+
+    // Olası "Object Cycle" (JSON sonsuz döngü) hatalarını önlemek için teklif verileri
+    var gridData = Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Select(x => new
+    {
+        id = x.Id,
+        teklifNo = x.TeklifNo,
+        musteriAd = x.Musteri != null ? x.Musteri.Unvan : "Bilinmeyen Müşteri",
+        baslangicTarihi = x.BaslangicTarihi,
+        bitisTarihi = x.BitisTarihi,
+        paraBirimi = x.ParaBirimi
+    })));
+
+    // Controller'dan gelen Şablonları (Templates) güvenli bir şekilde JSON'a çeviriyoruz
+    var templatesList = ViewBag.Templates as IEnumerable<Core.Entities.ReportTemplate> ?? new List<Core.Entities.ReportTemplate>();
+    var templatesData = Html.Raw(System.Text.Json.JsonSerializer.Serialize(templatesList.Select(x => new
+    {
+        id = x.Id,
+        name = x.Name
+    })));
 }
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-primary"><i class="fa fa-list me-2"></i>Teklif Listesi</h3>
+<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/23.2.4/css/dx.light.css">
 
+<style>
+    /* ARAMA KUTUSUNU TAM SATIR YAPMAK İÇİN GEREKLİ CSS */
+    .dx-datagrid-header-panel .dx-toolbar-after {
+        width: 100%;
+        padding-left: 0 !important;
+    }
+
+    .dx-datagrid-search-panel {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+        .dx-datagrid-search-panel .dx-texteditor-input {
+            padding-left: 35px; /* İkonun yazının üstüne gelmemesi için */
+        }
+</style>
+
+<div class="container-fluid mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary fw-bold">
+            <i class="fa fa-list-alt me-2"></i>Teklif Listesi
+        </h3>
         <div>
-            <a href="/ReportDesigner/Index?id=Yeni_Tasarim" class="btn btn-warning text-dark me-2 shadow-sm">
+            <a href="/ReportDesigner/Index?id=Yeni_Tasarim&docType=Teklif" class="btn btn-outline-secondary shadow-sm px-3 fw-bold me-2">
                 <i class="fa fa-paint-brush me-1"></i> Şablon Tasarla
             </a>
-
-            <a href="/Teklif/Create" class="btn btn-success shadow-sm">
+            <a href="/Teklif/Create" class="btn btn-primary shadow-sm px-4 fw-bold">
                 <i class="fa fa-plus me-1"></i> Yeni Teklif Oluştur
             </a>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive" style="overflow: visible; min-height: 350px;">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">Teklif No</th>
-                            <th>Müşteri (Cari)</th>
-                            <th>Tarih</th>
-                            <th>Toplam Tutar</th>
-                            <th class="text-end pe-4">İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">Henüz hiç teklif oluşturulmamış.</td>
-                            </tr>
-                        }
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="ps-4 fw-bold">@item.TeklifNo</td>
-                                <td>@item.Musteri?.Unvan</td>
-                                <td>@item.Tarih.ToString("dd.MM.yyyy HH:mm")</td>
-                                <td><span class="badge bg-success fs-6">@item.ToplamTutar.ToString("N2") ₺</span></td>
-                                <td class="text-end pe-4">
-                                    <div class="btn-group">
-
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="fa fa-print"></i> Yazdır
-                                            </button>
-                                            <ul class="dropdown-menu shadow-sm border-0">
-                                                @if (ViewBag.Templates != null && ((IEnumerable<Core.Entities.ReportTemplate>)ViewBag.Templates).Any())
-                                                {
-                                                    <li class="dropdown-header text-muted">Şablon Seçin</li>
-                                                    foreach (var tpl in (IEnumerable<Core.Entities.ReportTemplate>)ViewBag.Templates)
-                                                    {
-                                                        <li>
-                                                            <a class="dropdown-item py-2" href="/DocumentViewer/TeklifYazdir?id=@item.Id&templateId=@tpl.Id" target="_blank">
-                                                                <i class="fa fa-file-pdf text-danger me-2"></i> @tpl.Name
-                                                            </a>
-                                                        </li>
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    <li><span class="dropdown-item text-muted">Şablon Bulunamadı</span></li>
-                                                }
-                                            </ul>
-                                        </div>
-
-                                        <button class="btn btn-sm btn-outline-info"><i class="fa fa-eye"></i> İncele</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-3 bg-white rounded-3">
+            <div id="teklifGridContainer"></div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn3.devexpress.com/jslib/23.2.4/js/dx.all.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            var dataSource = @gridData;
+            var templateList = @templatesData;
+
+            $("#teklifGridContainer").dxDataGrid({
+                dataSource: dataSource,
+                keyExpr: "id",
+                showBorders: true,
+                showRowLines: true,
+                showColumnLines: false,
+                rowAlternationEnabled: true,
+                hoverStateEnabled: true,
+                wordWrapEnabled: true,
+                filterRow: { visible: true },
+                headerFilter: { visible: true },
+                searchPanel: {
+                    visible: true,
+                    width: "100%", // Genişliği tam satır (%100) olarak ayarladık
+                    placeholder: "Listede Ara (No, Müşteri)..."
+                },
+                paging: { pageSize: 15 },
+                pager: {
+                    showPageSizeSelector: true,
+                    allowedPageSizes: [10, 15, 20, 50],
+                    showInfo: true,
+                    showNavigationButtons: true
+                },
+                allowColumnResizing: true,
+                columnAutoWidth: true,
+                columns: [
+                    {
+                        dataField: "teklifNo",
+                        caption: "Teklif No",
+                        alignment: "center",
+                        width: 140,
+                        cssClass: "fw-bold text-primary",
+                        cellTemplate: function(container, options) {
+                            $("<span class='badge bg-light text-dark border px-2 py-1 fs-6'>")
+                                .text(options.value)
+                                .appendTo(container);
+                        }
+                    },
+                    {
+                        dataField: "musteriAd",
+                        caption: "Müşteri / Cari",
+                        allowFiltering: true,
+                        cssClass: "fw-semibold text-dark"
+                    },
+                    {
+                        dataField: "baslangicTarihi",
+                        caption: "Başlangıç Tarihi",
+                        dataType: "date",
+                        format: "dd.MM.yyyy",
+                        alignment: "center",
+                        width: 150
+                    },
+                    {
+                        dataField: "bitisTarihi",
+                        caption: "Geçerlilik Bitiş",
+                        dataType: "date",
+                        format: "dd.MM.yyyy",
+                        alignment: "center",
+                        width: 150
+                    },
+                    {
+                        dataField: "paraBirimi",
+                        caption: "Belge PB",
+                        alignment: "center",
+                        width: 110,
+                        cellTemplate: function(container, options) {
+                            var pb = options.value || 'TL';
+                            $("<span class='badge bg-secondary px-2 py-1'>").text(pb).appendTo(container);
+                        }
+                    },
+                    {
+                        caption: "İşlemler",
+                        width: 90,
+                        alignment: "center",
+                        cellTemplate: function(container, options) {
+
+                            container.addClass("d-flex justify-content-center align-items-center");
+
+                            // 1. Kapsayıcı Buton ve Menü Elementleri
+                            var $btn = $("<div>").appendTo(container);
+                            var $menu = $("<div>").appendTo(container);
+
+                            var isMenuOpen = false;
+
+                            // Alt menüdeki şablonları hazırlıyoruz
+                            var printSubItems = [];
+                            if(templateList.length > 0) {
+                                templateList.forEach(function(t) {
+                                    printSubItems.push({
+                                        text: t.name,
+                                        icon: "exportpdf",
+                                        onClick: function() {
+                                            window.location.href = '/DocumentViewer/TeklifYazdir/' + options.data.id + '?templateId=' + t.id;
+                                        }
+                                    });
+                                });
+                            } else {
+                                printSubItems.push({ text: "Şablon Bulunamadı", disabled: true });
+                            }
+
+                            // Menü içeriği
+                            var menuItems = [
+                                {
+                                    text: "Yazdır",
+                                    icon: "print",
+                                    items: printSubItems // Üzerine gelince (Hover) otomatik açılan iç menü
+                                },
+                                {
+                                    text: "Düzenle",
+                                    icon: "edit",
+                                    beginGroup: true,
+                                    onClick: function() {
+                                        window.location.href = '/Teklif/Edit/' + options.data.id;
+                                    }
+                                },
+                                {
+                                    text: "Sil",
+                                    icon: "trash",
+                                    beginGroup: true,
+                                    template: function() {
+                                        return $("<div class='text-danger fw-bold d-flex align-items-center px-2'>")
+                                            .append("<i class='dx-icon dx-icon-trash me-2' style='font-size: 16px;'></i>")
+                                            .append("<span>Sil</span>");
+                                    },
+                                    onClick: function() {
+                                        var result = DevExpress.ui.dialog.confirm("<b class='text-primary'>" + options.data.teklifNo + "</b> numaralı teklifi silmek istediğinize emin misiniz?", "Teklif Sil");
+                                        result.done(function(dialogResult) {
+                                            if(dialogResult) {
+                                                $.ajax({
+                                                    url: '/Teklif/Delete/' + options.data.id,
+                                                    type: 'POST',
+                                                    success: function() { window.location.reload(); },
+                                                    error: function() { alert("Silme işlemi başarısız oldu veya sunucu hatası."); }
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            ];
+
+                            // 2. Butona Bağlanan Açılır Menü (ContextMenu)
+                            var contextMenuInstance = $menu.dxContextMenu({
+                                target: $btn,
+                                showEvent: "",
+                                // Menüyü tamamen butonun soluna almak için hizalama ayarı:
+                                position: { my: "top right", at: "bottom left" },
+                                items: menuItems,
+                                width: 200,
+                                onShowing: function() {
+                                    isMenuOpen = true;
+                                },
+                                onHidden: function() {
+                                    setTimeout(function() {
+                                        isMenuOpen = false;
+                                    }, 150);
+                                }
+                            }).dxContextMenu("instance");
+
+                            // 3. Şık, Dikey "Üç Nokta" butonu (Belirginleştirilmiş)
+                            $btn.dxButton({
+                                icon: "overflow", // Dikey üç nokta ikonu
+                                hint: "İşlemler",
+                                stylingMode: "outlined",
+                                type: "default",
+                                elementAttr: {
+                                    class: "shadow-sm"
+                                },
+                                onClick: function(e) {
+                                    e.event.stopPropagation();
+
+                                    if (isMenuOpen) {
+                                        contextMenuInstance.hide();
+                                    } else {
+                                        contextMenuInstance.show();
+                                    }
+                                }
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+}
