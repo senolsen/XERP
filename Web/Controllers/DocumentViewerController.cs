@@ -23,7 +23,6 @@ namespace Web.Controllers
         [HttpGet]
         public async Task<IActionResult> TeklifYazdir(int id, int? templateId)
         {
-            // 1. Teklif verisini çekiyoruz
             var teklif = await _teklifRepository.Where(x => x.Id == id)
                 .Include(x => x.Musteri)
                 .Include(x => x.Kalemler)
@@ -35,12 +34,20 @@ namespace Web.Controllers
                 return NotFound("Yazdırılmak istenen teklif bulunamadı!");
             }
 
-            // 2. ENTITY -> DTO DÖNÜŞÜMÜ (Tasarımcıdaki temiz veri için)
             var teklifDto = new Core.DTOs.Reporting.TeklifRaporDTO
             {
                 TeklifNo = teklif.TeklifNo,
                 Tarih = teklif.Tarih,
+                BaslangicTarihi = teklif.BaslangicTarihi,
+                BitisTarihi = teklif.BitisTarihi,
+                ParaBirimi = teklif.ParaBirimi,
+                Aciklama = teklif.Aciklama,
+
+                AraToplam = teklif.AraToplam,
+                ToplamIndirim = teklif.ToplamIndirim,
+                ToplamKdv = teklif.ToplamKdv,
                 ToplamTutar = teklif.ToplamTutar,
+
                 MusteriUnvan = teklif.Musteri?.Unvan,
                 MusteriVergiNo = teklif.Musteri?.VergiNo,
                 MusteriVergiDairesi = teklif.Musteri?.VergiDairesi,
@@ -50,28 +57,31 @@ namespace Web.Controllers
                     UrunAdi = k.Urun?.UrunAdi,
                     Miktar = k.Miktar,
                     BirimFiyat = k.BirimFiyat,
-                    ToplamFiyat = k.Miktar * k.BirimFiyat
+                    IndirimOrani = k.IndirimOrani,
+                    IndirimTutari = k.IndirimTutari,
+                    KdvOrani = k.KdvOrani,
+                    KdvTutari = k.KdvTutari,
+                    ToplamFiyat = k.ToplamTutar
                 }).ToList()
             };
 
-            // 3. ŞABLONU ÇEKİYORUZ
             ReportTemplate template = null;
 
             if (templateId.HasValue)
             {
-                // Kullanıcı menüden özel bir şablon seçtiyse
-                template = await _templateRepository.Where(x => x.Id == templateId.Value).FirstOrDefaultAsync();
+                template = await _templateRepository
+                    .Where(x => x.Id == templateId.Value)
+                    .FirstOrDefaultAsync();
             }
             else
             {
-                // Seçim yoksa en son ekleneni getir
                 template = await _templateRepository
                     .Where(x => x.DocumentType == Core.Enums.DocumentType.Teklif)
-                    .OrderByDescending(x => x.Id)
+                    .OrderByDescending(x => x.IsDefault)
+                    .ThenByDescending(x => x.Id)
                     .FirstOrDefaultAsync();
             }
 
-            // 4. RAPORU OLUŞTUR VE BAĞLA
             XtraReport report = new XtraReport();
 
             if (template != null && template.LayoutData != null)
